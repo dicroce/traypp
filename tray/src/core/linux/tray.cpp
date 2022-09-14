@@ -21,12 +21,12 @@ Tray::Tray::Tray(std::string identifier, Icon icon) : BaseTray(std::move(identif
 
     appIndicator = app_indicator_new(this->identifier.c_str(), this->icon, APP_INDICATOR_CATEGORY_APPLICATION_STATUS);
 
-#if 1
+#if 0
     gchar *current_dir = g_get_current_dir();
     g_print("%s current_dir:%s\n", G_STRFUNC, current_dir);
     gchar *theme_path = g_build_path(G_DIR_SEPARATOR_S,
                             current_dir,
-                            "data",
+                            "/",
                             NULL);
     g_print("%s path:%s\n", G_STRFUNC, theme_path);
     gtk_icon_theme_add_resource_path(gtk_icon_theme_get_default(), theme_path);
