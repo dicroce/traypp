@@ -29,7 +29,8 @@ Tray::Tray::Tray(std::string identifier, Icon icon) : BaseTray(std::move(identif
                             "data",
                             NULL);
     g_print("%s path:%s\n", G_STRFUNC, theme_path);
-    app_indicator_set_icon_theme_path(appIndicator, theme_path);
+    gtk_icon_theme_add_resource_path(gtk_icon_theme_get_default(), theme_path);
+    //app_indicator_set_icon_theme_path(appIndicator, theme_path);
     g_free(current_dir);
     g_free(theme_path);
 #endif
