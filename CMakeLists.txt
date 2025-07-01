@@ -23,13 +23,15 @@ if(UNIX AND NOT APPLE)
     # Ask pkg-config to give us IMPORTED targets that already carry their flags
     pkg_check_modules(GTK3          REQUIRED IMPORTED_TARGET gtk+-3.0)
     pkg_check_modules(APPINDICATOR  REQUIRED IMPORTED_TARGET ayatana-appindicator3-0.1)
+    pkg_check_modules(CAIRO         REQUIRED IMPORTED_TARGET cairo)
 
     # Link – using the IMPORTED targets automatically propagates include paths,
     # link libs (-lgtk-3, -lgdk-3, -lcairo, …) and extra compile flags (-pthread)
     target_link_libraries(tray
         PUBLIC                         # make the deps visible to consumers
             PkgConfig::GTK3
-            PkgConfig::APPINDICATOR)
+            PkgConfig::APPINDICATOR
+            PkgConfig::CAIRO)
 
     # Extra warnings (but **no -Werror** on external code)
     if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang)$")
