@@ -1,31 +1,32 @@
-cmake_minimum_required(VERSION 3.14)
-project(tray VERSION 0.2 DESCRIPTION "A cross-platform C++ system tray library")
-
-file(GLOB src
-    "tray/src/*.cpp"
-    "tray/src/*/*.cpp"
-    "tray/src/*/*/*.cpp"
-)
-
-add_library(tray STATIC ${src})
-
-if (UNIX)
+if(UNIX)
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
-    pkg_check_modules(APPINDICATOR REQUIRED ayatana-appindicator3-0.1)
 
-    target_link_libraries(tray INTERFACE ${GTK3_LIBRARIES} ${APPINDICATOR_LIBRARIES})
-    target_compile_options(tray PRIVATE -Wall -Wextra -Werror -pedantic -Wno-unused-lambda-capture)
-    target_include_directories(tray SYSTEM PUBLIC ${GTK3_INCLUDE_DIRS} ${APPINDICATOR_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR})
+    pkg_check_modules(GTK3          REQUIRED gtk+-3.0)
+    pkg_check_modules(APPINDICATOR  REQUIRED ayatana-appindicator3-0.1)
+
+    # Headers → propagate to users of tray
+    target_include_directories(tray
+        PUBLIC
+            ${GTK3_INCLUDE_DIRS}
+            ${APPINDICATOR_INCLUDE_DIRS}
+            ${PROJECT_SOURCE_DIR}/tray/include      # your own headers
+        SYSTEM PUBLIC                               # mark as system to silence warnings
+            ${GTK3_INCLUDE_DIRS} ${APPINDICATOR_INCLUDE_DIRS}
+    )
+
+    # Link flags → propagate to users of tray
+    target_link_libraries(tray
+        PUBLIC            # <── this is the key change
+            ${GTK3_LIBRARIES}
+            ${APPINDICATOR_LIBRARIES}
+    )
+
+    # CFLAGS from pkg-config (e.g. -pthread, -D_REENTRANT)
+    target_compile_options(tray
+        PUBLIC ${GTK3_CFLAGS_OTHER} ${APPINDICATOR_CFLAGS_OTHER}
+        PRIVATE -Wall -Wextra -Werror -pedantic -Wno-unused-lambda-capture
+    )
 endif()
 
-target_include_directories(tray SYSTEM PUBLIC "tray/include")
-
+target_include_directories(tray PUBLIC tray/include)
 target_compile_features(tray PRIVATE cxx_std_17)
-set_target_properties(tray PROPERTIES 
-                      CXX_STANDARD 17
-                      CXX_EXTENSIONS OFF
-                      CXX_STANDARD_REQUIRED ON)
-
-set_target_properties(tray PROPERTIES VERSION ${PROJECT_VERSION})
-set_target_properties(tray PROPERTIES PROJECT_NAME ${PROJECT_NAME})
