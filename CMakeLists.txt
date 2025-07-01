@@ -18,6 +18,11 @@ if(UNIX AND NOT APPLE)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GTK3          REQUIRED gtk+-3.0)
     pkg_check_modules(APPINDICATOR  REQUIRED ayatana-appindicator3-0.1)
+    
+    target_include_directories(tray
+    PUBLIC
+        ${GTK3_INCLUDE_DIRS}
+        ${APPINDICATOR_INCLUDE_DIRS})
 
     target_compile_options(tray PUBLIC
         ${GTK3_CFLAGS_OTHER}
