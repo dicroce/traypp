@@ -6,10 +6,13 @@ A cross-platform C++17 library that allows you to create simple tray menus.
 | -------- | -------------- |
 | Windows  | WinAPI         |
 | Linux    | AppIndicator   |
+| macOS    | NSStatusBar    |
 
 ## Dependencies
 - Linux
   - libappindicator-gtk3
+- macOS
+  - Cocoa framework (included with macOS SDK)
 
 ## Basic Usage
 ```cpp
@@ -29,7 +32,9 @@ int main()
   return 0;
 }
 ```
-> On Windows it is not necessary to pass an icon path as icon, you can also use an icon-resource or an existing HICON.
+> **Platform-specific notes:**
+> - **Windows**: You can pass an icon path, icon-resource, or an existing HICON
+> - **macOS**: Icon should be a path to a PNG file or a system icon name (e.g., "NSStatusAvailable")
 
 ## Menu components
 ### Button
@@ -44,11 +49,13 @@ Button(std::string text, std::function<void()> callback);
 ImageButton(std::string text, Image image, std::function<void()> callback);
 ```
 **Parameters:**
-- `image` - The image tho show
+- `image` - The image to show
   - Windows
     > Image should either be a path to a bitmap or an HBITMAP
   - Linux
-    > Image should either be a path to a png or a GtkImage
+    > Image should either be a path to a PNG or a GtkImage
+  - macOS
+    > Image should be a path to a PNG file or NSImage pointer
 - `callback` - The function that is called when the button is pressed
 ----
 ### Toggle

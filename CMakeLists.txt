@@ -7,6 +7,11 @@ project(tray VERSION 0.2 DESCRIPTION "A cross-platform C++ system-tray library"
 # ─── source files ─────────────────────────────────────────────────────────────
 # Everything under tray/src/ (one recursive glob keeps it readable)
 file(GLOB_RECURSE src CONFIGURE_DEPENDS "tray/src/*.cpp")
+# macOS uses Objective-C++ (.mm files)
+if(APPLE)
+    file(GLOB_RECURSE src_mm CONFIGURE_DEPENDS "tray/src/*.mm")
+    list(APPEND src ${src_mm})
+endif()
 
 add_library(tray STATIC ${src})
 
@@ -43,6 +48,20 @@ if(UNIX AND NOT APPLE)
     check_cxx_compiler_flag("-Wno-unused-lambda-capture" HAS_WNO_UNUSED_LAMBDA)
     if(HAS_WNO_UNUSED_LAMBDA)
         target_compile_options(tray PRIVATE -Wno-unused-lambda-capture)
+    endif()
+elseif(APPLE)
+    # macOS: Enable Objective-C++ for .mm files
+    enable_language(OBJCXX)
+    set_source_files_properties(${src_mm} PROPERTIES
+        COMPILE_FLAGS "-x objective-c++")
+
+    # Find and link Cocoa framework
+    find_library(COCOA_LIBRARY Cocoa REQUIRED)
+    target_link_libraries(tray PUBLIC ${COCOA_LIBRARY})
+
+    # Extra warnings
+    if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang)$")
+        target_compile_options(tray PRIVATE -Wall -Wextra -pedantic)
     endif()
 endif()
 
