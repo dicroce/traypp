@@ -34,5 +34,18 @@ namespace Tray
 
         operator HBITMAP();
     };
+#elif defined(__APPLE__)
+    class Image
+    {
+        void *nsImage;  // NSImage*
+
+      public:
+        ~Image();
+        Image(void *image);
+        Image(const char *path);
+        Image(const std::string &path);
+
+        operator void*();
+    };
 #endif
 } // namespace Tray

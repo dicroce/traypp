@@ -29,5 +29,17 @@ namespace Tray
 
         operator HICON();
     };
+#elif defined(__APPLE__)
+    class Icon
+    {
+        void *nsImage;  // NSImage*
+
+      public:
+        ~Icon();
+        Icon(const char *path);
+        Icon(const std::string &path);
+
+        operator void*();
+    };
 #endif
 } // namespace Tray

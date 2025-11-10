@@ -11,4 +11,6 @@
 #include <core/windows/tray.hpp>
 #elif defined(__linux__)
 #include <core/linux/tray.hpp>
+#elif defined(__APPLE__)
+#include <core/macos/tray.hpp>
 #endif
