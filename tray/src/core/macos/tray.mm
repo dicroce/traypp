@@ -213,8 +213,8 @@ void Tray::Tray::constructIntoMenu(NSMenu *nsMenu, const std::vector<std::shared
             }
             else if (dynamic_cast<Button *>(item))
             {
-                const char *text = item->getText().c_str();
-                NSString *title = text ? [NSString stringWithUTF8String:text] : @"";
+                std::string text = item->getText();
+                NSString *title = [NSString stringWithUTF8String:text.c_str()];
                 nsItem = [[NSMenuItem alloc] initWithTitle:title
                                                     action:@selector(menuItemClicked:)
                                              keyEquivalent:@""];
