@@ -23,6 +23,7 @@ namespace Tray
         NSMenu *menu;
         TrayDelegate *delegate;
 
+        static void constructIntoMenu(NSMenu *menu, const std::vector<std::shared_ptr<TrayEntry>> &, Tray *parent);
         static NSMenu *construct(const std::vector<std::shared_ptr<TrayEntry>> &, Tray *parent);
         static void menuItemClicked(void *context);
 

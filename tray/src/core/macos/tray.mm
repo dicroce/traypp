@@ -24,7 +24,8 @@
 - (void)menuItemClicked:(id)sender
 {
     NSMenuItem *menuItem = (NSMenuItem *)sender;
-    Tray::TrayEntry *item = (__bridge Tray::TrayEntry *)menuItem.representedObject;
+    NSValue *value = (NSValue *)menuItem.representedObject;
+    Tray::TrayEntry *item = (Tray::TrayEntry *)[value pointerValue];
 
     if (auto *button = dynamic_cast<Tray::Button *>(item); button)
     {
@@ -53,7 +54,15 @@ Tray::Tray::Tray(std::string identifier, Icon icon) : BaseTray(std::move(identif
 {
     @autoreleasepool {
         // Initialize NSApplication if not already done
-        [NSApplication sharedApplication];
+        NSApp = [NSApplication sharedApplication];
+
+        // Set activation policy to accessory so app doesn't appear in dock
+        [NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
+
+        // Finish launching if not already done
+        if (![NSApp isRunning]) {
+            [NSApp finishLaunching];
+        }
 
         // Create status bar item
         statusItem = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength] retain];
@@ -64,9 +73,14 @@ Tray::Tray::Tray(std::string identifier, Icon icon) : BaseTray(std::move(identif
 
         // Set the icon
         NSImage *nsIcon = (__bridge NSImage *)static_cast<void*>(this->icon);
-        if (nsIcon)
+        if (nsIcon && [nsIcon isKindOfClass:[NSImage class]])
         {
+            // Set the icon as a template so it adapts to light/dark mode
+            [nsIcon setTemplate:YES];
             statusItem.button.image = nsIcon;
+        } else {
+            // Even without an icon, set a visible title so the item appears
+            statusItem.button.title = @"⚫";
         }
 
         // Create menu
@@ -132,31 +146,26 @@ void Tray::Tray::exit()
 void Tray::Tray::update()
 {
     @autoreleasepool {
+        // Don't update if not fully initialized
+        if (!statusItem || !menu || !delegate) {
+            return;
+        }
+
         // Clear existing menu items
         [menu removeAllItems];
 
-        // Reconstruct the menu
-        NSMenu *newMenu = construct(entries, this);
-
-        // Copy items to our menu
-        for (NSMenuItem *item in newMenu.itemArray)
-        {
-            [menu addItem:item];
-        }
+        // Reconstruct menu items directly into the existing menu
+        constructIntoMenu(menu, entries, this);
 
         // Set the menu on the status item
         statusItem.menu = menu;
-
-        [newMenu release];
     }
 }
 
-NSMenu *Tray::Tray::construct(const std::vector<std::shared_ptr<TrayEntry>> &entries, Tray *parent)
+// Helper to construct menu items into an existing menu
+void Tray::Tray::constructIntoMenu(NSMenu *nsMenu, const std::vector<std::shared_ptr<TrayEntry>> &entries, Tray *parent)
 {
     @autoreleasepool {
-        NSMenu *nsMenu = [[NSMenu alloc] init];
-        nsMenu.autoenablesItems = NO;
-
         for (const auto &entry : entries)
         {
             auto *item = entry.get();
@@ -169,7 +178,7 @@ NSMenu *Tray::Tray::construct(const std::vector<std::shared_ptr<TrayEntry>> &ent
                                              keyEquivalent:@""];
                 nsItem.target = parent->delegate;
                 nsItem.state = toggle->isToggled() ? NSControlStateValueOn : NSControlStateValueOff;
-                nsItem.representedObject = (__bridge id)(void*)item;
+                nsItem.representedObject = [NSValue valueWithPointer:item];
             }
             else if (auto *syncedToggle = dynamic_cast<SyncedToggle *>(item); syncedToggle)
             {
@@ -178,7 +187,7 @@ NSMenu *Tray::Tray::construct(const std::vector<std::shared_ptr<TrayEntry>> &ent
                                              keyEquivalent:@""];
                 nsItem.target = parent->delegate;
                 nsItem.state = syncedToggle->isToggled() ? NSControlStateValueOn : NSControlStateValueOff;
-                nsItem.representedObject = (__bridge id)(void*)item;
+                nsItem.representedObject = [NSValue valueWithPointer:item];
             }
             else if (auto *submenu = dynamic_cast<Submenu *>(item); submenu)
             {
@@ -194,7 +203,7 @@ NSMenu *Tray::Tray::construct(const std::vector<std::shared_ptr<TrayEntry>> &ent
                                                     action:@selector(menuItemClicked:)
                                              keyEquivalent:@""];
                 nsItem.target = parent->delegate;
-                nsItem.representedObject = (__bridge id)(void*)item;
+                nsItem.representedObject = [NSValue valueWithPointer:item];
 
                 NSImage *nsImage = (__bridge NSImage *)static_cast<void*>(imageButton->getImage());
                 if (nsImage)
@@ -204,11 +213,13 @@ NSMenu *Tray::Tray::construct(const std::vector<std::shared_ptr<TrayEntry>> &ent
             }
             else if (dynamic_cast<Button *>(item))
             {
-                nsItem = [[NSMenuItem alloc] initWithTitle:[NSString stringWithUTF8String:item->getText().c_str()]
+                const char *text = item->getText().c_str();
+                NSString *title = text ? [NSString stringWithUTF8String:text] : @"";
+                nsItem = [[NSMenuItem alloc] initWithTitle:title
                                                     action:@selector(menuItemClicked:)
                                              keyEquivalent:@""];
                 nsItem.target = parent->delegate;
-                nsItem.representedObject = (__bridge id)(void*)item;
+                nsItem.representedObject = [NSValue valueWithPointer:item];
             }
             else if (dynamic_cast<Label *>(item))
             {
@@ -233,7 +244,16 @@ NSMenu *Tray::Tray::construct(const std::vector<std::shared_ptr<TrayEntry>> &ent
                 [nsMenu addItem:nsItem];
             }
         }
+    }
+}
 
+// Construct a new menu (used for submenus)
+NSMenu *Tray::Tray::construct(const std::vector<std::shared_ptr<TrayEntry>> &entries, Tray *parent)
+{
+    @autoreleasepool {
+        NSMenu *nsMenu = [[NSMenu alloc] init];
+        nsMenu.autoenablesItems = NO;
+        constructIntoMenu(nsMenu, entries, parent);
         return nsMenu;
     }
 }
@@ -241,8 +261,9 @@ NSMenu *Tray::Tray::construct(const std::vector<std::shared_ptr<TrayEntry>> &ent
 void Tray::Tray::run()
 {
     @autoreleasepool {
-        // Set the menu initially
-        statusItem.menu = construct(entries, this);
+        // Build menu items into the existing menu
+        constructIntoMenu(menu, entries, this);
+        statusItem.menu = menu;
 
         // Run the application event loop
         [NSApp run];
