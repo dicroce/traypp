@@ -123,6 +123,7 @@ void Tray::Tray::exit()
     @autoreleasepool {
         if (statusItem)
         {
+            statusItem.button.image = nil;
             [[NSStatusBar systemStatusBar] removeStatusItem:statusItem];
             [statusItem release];
             statusItem = nullptr;

@@ -24,8 +24,6 @@ Tray::Icon::Icon(const std::string &path)
     // If we have an image, set it up
     if (image) {
         [image setSize:NSMakeSize(18.0, 18.0)];
-        // Manually retain since we're not using ARC
-        [image retain];
         nsImage = (__bridge void*)image;
     } else {
         // Create a simple default icon using a more reliable approach
@@ -47,6 +45,44 @@ Tray::Icon::Icon(const std::string &path)
 }
 
 Tray::Icon::Icon(const char *path) : Icon(std::string(path)) {}
+
+Tray::Icon::Icon(const Icon &other) : nsImage(other.nsImage)
+{
+    if (nsImage) {
+        CFRetain(nsImage);
+    }
+}
+
+Tray::Icon &Tray::Icon::operator=(const Icon &other)
+{
+    if (this != &other) {
+        if (nsImage) {
+            CFRelease(nsImage);
+        }
+        nsImage = other.nsImage;
+        if (nsImage) {
+            CFRetain(nsImage);
+        }
+    }
+    return *this;
+}
+
+Tray::Icon::Icon(Icon &&other) noexcept : nsImage(other.nsImage)
+{
+    other.nsImage = nullptr;
+}
+
+Tray::Icon &Tray::Icon::operator=(Icon &&other) noexcept
+{
+    if (this != &other) {
+        if (nsImage) {
+            CFRelease(nsImage);
+        }
+        nsImage = other.nsImage;
+        other.nsImage = nullptr;
+    }
+    return *this;
+}
 
 Tray::Icon::operator void*()
 {

@@ -39,6 +39,11 @@ namespace Tray
         Icon(const char *path);
         Icon(const std::string &path);
 
+        Icon(const Icon &other);
+        Icon &operator=(const Icon &other);
+        Icon(Icon &&other) noexcept;
+        Icon &operator=(Icon &&other) noexcept;
+
         operator void*();
     };
 #endif
