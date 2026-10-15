@@ -8,3 +8,8 @@ std::vector<std::shared_ptr<Tray::TrayEntry>> Tray::BaseTray::getEntries()
 {
     return entries;
 }
+
+std::string Tray::BaseTray::getTooltip() const
+{
+    return tooltip;
+}

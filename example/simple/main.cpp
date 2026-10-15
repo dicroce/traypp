@@ -4,6 +4,7 @@
 int main()
 {
     Tray::Tray tray("test", "icon.ico");
+    tray.setTooltip("Test Tray");
 
     tray.addEntry(Tray::Button("Exit", [&] { tray.exit(); }));
     tray.addEntry(Tray::Button("Test"))->setDisabled(true);

@@ -229,4 +229,14 @@ void Tray::Tray::pump()
     }
 }
 
+void Tray::Tray::setTooltip(std::string tooltip)
+{
+    this->tooltip = std::move(tooltip);
+
+    notifyData.uFlags |= NIF_TIP;
+    strncpy_s(notifyData.szTip, sizeof(notifyData.szTip), this->tooltip.c_str(), _TRUNCATE);
+
+    Shell_NotifyIcon(NIM_MODIFY, &notifyData);
+}
+
 #endif

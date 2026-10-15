@@ -31,6 +31,7 @@ namespace Tray
         void exit() override;
         void update() override;
         void pump() override;
+        void setTooltip(std::string tooltip) override;
     };
 } // namespace Tray
 #endif
