@@ -14,6 +14,7 @@ namespace Tray
       protected:
         Icon icon;
         std::string identifier;
+        std::string tooltip;
         std::vector<std::shared_ptr<TrayEntry>> entries;
 
       public:
@@ -38,6 +39,8 @@ namespace Tray
         virtual void exit() = 0;
         virtual void update() = 0;
         virtual void pump() = 0;
+        virtual void setTooltip(std::string tooltip) = 0;
+        std::string getTooltip() const;
         std::vector<std::shared_ptr<TrayEntry>> getEntries();
     };
 } // namespace Tray

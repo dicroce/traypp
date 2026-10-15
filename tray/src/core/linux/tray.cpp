@@ -187,4 +187,16 @@ void Tray::Tray::pump()
     gtk_main_iteration_do(false);
 }
 
+void Tray::Tray::setTooltip(std::string tooltip)
+{
+    this->tooltip = std::move(tooltip);
+
+    // AppIndicator has no real hover tooltip; the title is the closest equivalent and is shown as the
+    // tooltip by hosts that support it (e.g. KDE Plasma).
+    if (appIndicator)
+    {
+        app_indicator_set_title(appIndicator, this->tooltip.c_str());
+    }
+}
+
 #endif

@@ -265,4 +265,16 @@ void Tray::Tray::pump()
     }
 }
 
+void Tray::Tray::setTooltip(std::string tooltip)
+{
+    this->tooltip = std::move(tooltip);
+
+    @autoreleasepool {
+        if (statusItem)
+        {
+            statusItem.button.toolTip = [NSString stringWithUTF8String:this->tooltip.c_str()];
+        }
+    }
+}
+
 #endif

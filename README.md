@@ -36,6 +36,15 @@ int main()
 > - **Windows**: You can pass an icon path, icon-resource, or an existing HICON
 > - **macOS**: Icon should be a path to a PNG file or a system icon name (e.g., "NSStatusAvailable")
 
+## Tooltip
+```cpp
+tray.setTooltip("My App - Connected");
+```
+Sets the text shown when hovering over the tray icon. It can be called at any time to update the text.
+> **Platform-specific notes:**
+> - **Windows**: Truncated to 127 characters
+> - **Linux**: AppIndicator has no hover tooltip, so this sets the indicator title instead, which some hosts (e.g. KDE Plasma) display as the tooltip
+
 ## Menu components
 ### Button
 ```cpp
